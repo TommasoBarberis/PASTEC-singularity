@@ -9,7 +9,6 @@
 # -d|--directory: path to the directory that will contain singularity and PASTEC files (also the output of the program)
 # -s|--sif: path to the .sif file with the PASTEC image (see the README.md for more information)
 
-set -e
 POSITIONAL_ARGS=()
 
 ## Parsing parameter
@@ -46,22 +45,25 @@ mkdir -p $WORK_DIR/mysql/var/lib/mysql
 mkdir -p $WORK_DIR/mysql/run/mysqld
 
 ## initialize the container
-singularity instance start --bind ${WORK_DIR}:/mnt --bind ${WORK_DIR}/mysql/var/lib/mysql:/var/lib/mysql --bind ${WORK_DIR}/mysql/run/mysqld:/run/mysqld $SIF pastec 
+singularity instance start --bind ${WORK_DIR}:/mnt --bind ${WORK_DIR}/mysql/var/lib/mysql:/var/lib/mysql --bind ${WORK_DIR}/mysql/run/mysqld:/run/mysqld $SIF pastec
 
 command="singularity run instance://pastec"
 match="Version: '5.7.21'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)"
 log_file="log.txt"
+touch $log_file 2> /dev/null
 
-$command > "$log" 2>&1 &
+$command > "$log_file" 2>&1 &
 pid=$!
 
 while sleep 30
 do
-    if fgrep --quiet "$match" "$log"
+    if fgrep --quiet "$match" "$log_file"
     then
         kill $pid
         # exit 0
     fi
 done
+
+rm $log_file
 
 echo "The container has been initialised"
