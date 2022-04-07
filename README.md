@@ -25,16 +25,10 @@ cd PASTEC-singularity
 
 - To build the `.sif` image from the definition file:
 ```
-sudo singularity build PASTEC.sif PASTEC.def
+sudo singularity build pastec_latest.sif PASTEC.def
 ```
 
 ### Only user installation
-
-- Clone this repo and enter the directory:
-```
-git clone https://github.com/TommasoBarberis/PASTEC-singularity.git
-cd PASTEC-singularity
-```
 
 - Pull directly the `.sif` image from the [sylabs.io](sylabs.io) registry:
 
@@ -45,7 +39,7 @@ singularity pull --arch amd64 library://tommasobarberis98/pastec/pastec:latest
 
 ## Utilisation
 
-Store your project directory in a variable:
+Store your project directory path in a variable:
 ```
 PROJECT_DIR=path/to/project/dir
 ```
@@ -60,7 +54,7 @@ This directory has to contain:
 
     About the sequence headers, it is highly advised to write them like this : ">XX_i" with XX standing for letters and i standing for numbers. 
 
-- the `PASTEClassifier.cfg` file (provided with this git repo) to update some parameters such as the path to a known database of transposable elements (see more here: [PASTEClassfier-tuto](https://urgi.versailles.inra.fr/Tools/PASTEClassifier/PASTEClassifier-tuto)). Options that you are suggested to update:
+- the `PASTEClassifier.cfg` file (a template is provided with the github repo at the root folder) to update some parameters such as the path to a known database of transposable elements (see more here: [PASTEClassfier-tuto](https://urgi.versailles.inra.fr/Tools/PASTEClassifier/PASTEClassifier-tuto)). Options that you are suggested to update:
     - `project_name`: whatever you want.
     - `TE_nucl_bank`: `/mnt/nucl_bank.fa` such as `repbase20.05_ntSeq_cleaned_TE.fa` (from `RepBase20.05_REPET.embl` require subscription to [girinst](https://www.girinst.org/repbase/)), but you are free to use any other database. Then you can set:
         - `TE_BLRtx`: yes :arrow_right: homology with known TEs using tblastx.
@@ -83,17 +77,12 @@ The `PASTEC` program use the `MySQL` database that need to be run as a server, f
 bash path/to/init.sh -s pastec_latest.sif -d $PROJECT_DIR
 ```
 
-<!-- TODO: it will be automated -->
-This command will prompt several lines. When the line:
-> Version: '5.7.21'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server (GPL)
-
-you can quit with `ctrl+C` and pass to the next step.
-
 
 ### Interactive mode
 
 - Start a shell through the container:
 ```
+cd $PROJECT_DIR
 singularity shell instance://pastec
 ```
 - Once in the container, run:
@@ -101,20 +90,24 @@ singularity shell instance://pastec
 python2.7 /opt/PASTEC_linux-x64-2.0/bin/PASTEClassifier.py -i /mnt/consensi.fasta -C /mnt/PASTEClassifier.cfg
 ```
 
+> **NOTE**: the `/mnt` refer to your `PROJECT_DIR`, so you have to conserve it and you have only to append the file names.
+
 ### Batch mode
 
-Create a file `pastec_cmd.sh` that will contain thePASTEC command in your project directory (`$PROJECT_DIR`):
+Create a file `pastec_cmd.sh` (a template is provided in the `test` folder) that will contain the PASTEC command in your project directory (`$PROJECT_DIR`):
 ```
 #! /bin/bash 
 
-# in the following command the /mnt directory replace your project directory (through the --bind flag in the singularity command in the init.sh)
 python2.7 /opt/PASTEC_linux-x64-2.0/bin/PASTEClassifier.py -i /mnt/consensi.fasta -C /mnt/PASTEClassifier.cfg
 ```
 
 Then you can run `PASTEC` using the container instance as follow:
 ```
+cd $PROJECT_DIR
 singularity exec instance://pastec /mnt/pastec_cmd.sh
 ```
+
+> **NOTE**: the `/mnt` refer to your `PROJECT_DIR`, so you have to conserve it and you have only to append the file names.
 
 ### Other `PASTEC` options
 

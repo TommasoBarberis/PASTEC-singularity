@@ -1,3 +1,8 @@
 pastec_latest.sif
 log.txt
 test/mysql
+test/ProfilesBankForREPET_Pfam32.0.hmm
+test/repbase20.05*
+test/consensi.fasta.*
+test/consensi.fasta_*
+test/test_project*

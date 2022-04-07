@@ -53,17 +53,13 @@ log_file="log.txt"
 touch $log_file 2> /dev/null
 
 $command > "$log_file" 2>&1 &
-pid=$!
 
 while sleep 30
 do
     if fgrep --quiet "$match" "$log_file"
     then
-        kill $pid
-        # exit 0
+		rm $log_file
+		echo "The container has been initialised"
+        exit 0
     fi
 done
-
-rm $log_file
-
-echo "The container has been initialised"
