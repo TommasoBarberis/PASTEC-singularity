@@ -52,7 +52,11 @@ This directory has to contain:
     sed '/^>/!s/.\{60\}/&\n/g' oneline.fasta > multiline.fasta
     ```
 
-    About the sequence headers, it is highly advised to write them like this : ">XX_i" with XX standing for letters and i standing for numbers. 
+    About the sequence headers, it is highly advised to write them like this : ">XX_i" with XX standing for letters and i standing for numbers. <br>
+    So, if you another type of header, you can try:
+    ```
+    sed 's/>.\+$/>TE/g' old_file.fa | awk '/^>/{$0=$0"_"(++i)}1' > new_file.fa
+    ```
 
 - the `PASTEClassifier.cfg` file (a template is provided with the github repo at the root folder) to update some parameters such as the path to a known database of transposable elements (see more here: [PASTEClassfier-tuto](https://urgi.versailles.inra.fr/Tools/PASTEClassifier/PASTEClassifier-tuto)). Options that you are suggested to update:
     - `project_name`: whatever you want.
