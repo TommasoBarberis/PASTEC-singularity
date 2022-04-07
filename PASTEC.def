@@ -1,0 +1,87 @@
+Bootstrap: docker
+from: mysql:5.7.21
+
+%labels
+    AUTHOR Tommaso Barberis tommasobarberis98@gmail.com
+    VERSION  v1.0.0
+
+%post
+    cd /opt 
+
+    apt-get update
+    apt-get install -y --allow-unauthenticated \
+        python-pip \
+        libmysqlclient-dev \
+        wget \
+        hmmer
+
+    ## Download PASTEC
+    wget https://urgi.versailles.inrae.fr/download/repet/PASTEC_linux-x64-2.0.tar.gz
+    tar -xvf PASTEC_linux-x64-2.0.tar.gz
+
+    ## Fix on PASTEC modules
+    for pkg in $(ls -d /opt/PASTEC_linux-x64-2.0/*/); do
+        for module in $(ls -1 $pkg/*py); do
+            sed 's/from commons./from /g' $module > tmp && cat tmp > $module && rm tmp
+            sed 's/from PASTEC./from /g' $module > tmp && cat tmp > $module && rm tmp
+        done
+    done 2> /dev/null
+
+
+    ### Installing Python modules
+    pip install PyYAML==5.4.1
+    pip install mysqlclient==1.4.6
+
+    ## Installing optional dependencies for PASTEC
+
+    ### Installing BLAST+
+    wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.13.0/ncbi-blast-2.13.0+-x64-linux.tar.gz
+    tar -xvf ncbi-blast-2.13.0+-x64-linux.tar.gz
+
+    ### Installing TRF
+    wget https://github.com/Benson-Genomics-Lab/TRF/releases/download/v4.09.1/trf409.linux64
+    mv trf409.linux64 trf
+    chmod +x trf
+
+    ## Downloading Pfam
+    cd /media
+    wget https://urgi.versailles.inra.fr/download/repet/profiles/ProfilesBankForREPET_Pfam32.0.hmm.tar.gz
+    tar -xvf ProfilesBankForREPET_Pfam32.0.hmm.tar.gz
+    rm ProfilesBankForREPET_Pfam32.0.hmm.tar.gz
+
+    ## Clean
+    cd /opt
+    rm *tar.gz
+
+%environment
+    export PATH=/opt/PASTEC_linux-x64-2.0/bin:$PATH
+    export PATH=/opt/ncbi-blast-2.13.0+/bin:$PATH
+    export PATH=/opt/:$PATH
+    export REPET_PATH=/opt/PASTEC_linux-x64-2.0
+    export PYTHONPATH=/opt/PASTEC_linux-x64-2.0/PASTEC:/opt/PASTEC_linux-x64-2.0/commons:/opt/PASTEC_linux-x64-2.0/PASTEC:/opt/PASTEC_linux-x64-2.0/PASTEC
+
+%runscript
+    touch /var/lib/mysql/write_test
+    if [ ! -f /var/lib/mysql/write_test ]
+    then
+        echo '/var/lib/mysql is not writable.  Please see https://www.hpc.iastate.edu/guides/containers/mysql-server'
+        echo 'for instructions on bind-mounting host directories into this container.'
+        exit 1
+    fi
+    rm -f /var/lib/mysql/write_test
+
+        # Check for initialization
+    if [ ! -d /var/lib/mysql/mysql ]
+    then
+        echo "Initializing mysqld"
+        mysqld --initialize-insecure
+    fi
+
+    # Finally, launch mysqld
+    echo ""
+    echo "Start mysqld"
+    mysqld &
+
+%help
+Singularity container for PASTEC from the REPET package. For more details, see the README.md 
+at the github repo: https://github.com/TommasoBarberis/PASTEC-singularity
